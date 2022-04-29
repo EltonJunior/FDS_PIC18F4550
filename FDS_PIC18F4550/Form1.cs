@@ -200,6 +200,7 @@ namespace FDS_PIC18F4550
                     gbADC.Enabled = true;
                     gbLEDs.Enabled = true;
                     gbEEPROM.Enabled = true;
+                    gbSwiths.Enabled = true;
 
                 }
                 catch 
@@ -220,6 +221,7 @@ namespace FDS_PIC18F4550
                     gbADC.Enabled = false;
                     gbLEDs.Enabled = false;
                     gbEEPROM.Enabled = false;
+                    gbSwiths.Enabled = false;
 
                     //Dispose the In and Out buffers;
                     serialPort1.DiscardInBuffer();
@@ -429,7 +431,7 @@ namespace FDS_PIC18F4550
             // /#EEPR00#\    -> 10
 
             string str1, str2, str3, str4, str5;
-            int SizeOfString = a.Length;
+            int valueConverted, SizeOfString = a.Length;
 
             try
             {
@@ -457,14 +459,16 @@ namespace FDS_PIC18F4550
                         if (str3 == "M")
                         {
                             AD0_MediaGauge.Value = (int)Convert.ToInt32(str4);
+                            lbAD0_MediaGauge.Text = Convert.ToInt32(str4).ToString();
                             AD0_MediaGauge.BackColor = Color.WhiteSmoke;
-                            btnAD0_media.Enabled = false;
+                            btnAD0_media.Enabled = true;
                         }
                         if (str3 == "I")
                         {
                             AD0_InstGauge.Value = (int)Convert.ToInt32(str4);
+                            lbAD0_InstaGauge.Text = Convert.ToInt32(str4).ToString();
                             AD0_InstGauge.BackColor = Color.WhiteSmoke;
-                            btnAD0_instante.Enabled = false;
+                            btnAD0_instante.Enabled = true;
                         }
 
                     }
@@ -473,12 +477,14 @@ namespace FDS_PIC18F4550
                         if (str3 == "M")
                         {
                             AD1_MediaGauge.Value = (int)Convert.ToInt32(str4);
+                            lbAD1_MediaGauge.Text = Convert.ToInt32(str4).ToString();
                             AD1_MediaGauge.BackColor = Color.WhiteSmoke;
                             btnAD1_media.Enabled = true;
                         }
                         if (str3 == "I")
                         {
                             AD1_InstGauge.Value = (int)Convert.ToInt32(str4);
+                            lbAD1_InstaGauge.Text = Convert.ToInt32(str4).ToString();
                             AD1_InstGauge.BackColor = Color.WhiteSmoke;
                             btnAD1_instante.Enabled = true;
                         }
@@ -486,12 +492,43 @@ namespace FDS_PIC18F4550
                     if (str2 == "EEPR")
                     {
                         txtReadData.Text = str3;
-                        MessageBox.Show(str3);
                     }
                     if (str2 == "SWST")
                     {
-                        txtReadData.Text = str3;
-                        MessageBox.Show(str3);
+                        //txtReadData.Text = Convert.ToDecimal(str3).ToString();
+                        //txtReadData.Text =  string.Join("", str3.Select
+                        //    (c => String.Format("{0:X2}", Convert.ToInt32(c)))) ;
+
+                        //txtReadData.Text = ConvertStringToHex(str3);
+                        //txtReadData.Text = Convert.ToUInt16(str3).ToString("X2");
+                        //MessageBox.Show(Convert.ToUInt16(str3, 2).ToString());
+                        //txtReadData.Text = Convert.ToSByte(str3).ToString();
+                        valueConverted = Int16.Parse(str3, System.Globalization.NumberStyles.HexNumber);
+
+                        if (Convert.ToBoolean(valueConverted & 0x01)) btnStatusSW1.Text = "ON";
+                        else btnStatusSW1.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x02)) btnStatusSW2.Text = "ON";
+                        else btnStatusSW2.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x04)) btnStatusSW3.Text = "ON";
+                        else btnStatusSW3.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x08)) btnStatusSW4.Text = "ON";
+                        else btnStatusSW4.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x10)) btnStatusSW5.Text = "ON";
+                        else btnStatusSW5.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x20)) btnStatusSW6.Text = "ON";
+                        else btnStatusSW6.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x40)) btnStatusSW7.Text = "ON";
+                        else btnStatusSW7.Text = "OFF";
+
+                        if (Convert.ToBoolean(valueConverted & 0x80)) btnStatusSW8.Text = "ON";
+                        else btnStatusSW8.Text = "OFF";
+
                     }
                 }
             }
@@ -499,6 +536,45 @@ namespace FDS_PIC18F4550
             { }
 
         }
+        private string ConvertStringToHex(String input)
+        {
+            int Index = 0;
+            int Decimal = 0;
+            foreach (char Char in input.Reverse())
+            {
+                if (Index != 0)
+                {
+                    Decimal += Index * 2 * Convert.ToInt32(Char.ToString());
+                    Index = Index * 2;
+                }
+                else
+                {
+                    Decimal += Convert.ToInt32(Char.ToString());
+                    Index++;
+                }
+            }
+
+            //return toHex(Convert.ToInt64(Decimal));
+            return Convert.ToInt64(Decimal).ToString();
+        }
+
+        private string toHex(Int64 d)
+        {
+            var r = d % 16;
+            string result;
+            if (d - r == 0)
+                result = toChar(Convert.ToInt32(r));
+            else
+                result = toHex((d - r) / 16) + toChar(Convert.ToInt32(r));
+            return result;
+        }
+
+        private string toChar(int n)
+        {
+            const string alpha = "0123456789ABCDEF";
+            return alpha.Substring(n, 1);
+        }
+
         /****************************************************************************
           Function:
             private void LED0_CheckedChanged(object sender, EventArgs e)
@@ -525,6 +601,12 @@ namespace FDS_PIC18F4550
           ***************************************************************************/
         private void LED0_CheckedChanged(object sender, EventArgs e)
         {            
+            
+        }
+
+
+        private void sendToLED( bool onOff, string ValueToSend)
+        {
             try
             {
                 //This section of code will try to write to the COM port.
@@ -536,31 +618,31 @@ namespace FDS_PIC18F4550
                 //  try/catch statement this could result in the application
                 //  crashing.
 
-                if (LED0.Checked)
+                if (onOff)
                 {
-                    string valueMsgLength = "09";
+                    string valueMsgLength = "9";
                     string valueMsgID = "06";
-                    string valueMsgValue = "01";
+                    string valueMsgValue = ValueToSend;
 
                     string valueToSend = "/<" +
                         valueMsgLength +
                         valueMsgID +
                         valueMsgValue +
-                        @" >\";
+                        @">\";
 
                     SendDataToDevice(valueToSend);
                 }
                 else
                 {
-                    string valueMsgLength = "09";
+                    string valueMsgLength = "9";
                     string valueMsgID = "06";
-                    string valueMsgValue = "00";
+                    string valueMsgValue = ValueToSend;
 
                     string valueToSend = "/<" +
                         valueMsgLength +
                         valueMsgID +
                         valueMsgValue +
-                        @" >\";
+                        @">\";
 
                     SendDataToDevice(valueToSend);
                 }
@@ -579,7 +661,7 @@ namespace FDS_PIC18F4550
                 valueMsgLength +
                 valueMsgID +
                 valueMsgValue +
-                @" >\";
+                @">\";
 
             SendDataToDevice(valueToSend);
             AD0_InstGauge.BackColor = Color.Red;
@@ -596,7 +678,7 @@ namespace FDS_PIC18F4550
                 valueMsgLength +
                 valueMsgID +
                 valueMsgValue +
-                @" >\";
+                @">\";
 
             SendDataToDevice(valueToSend);
             AD1_InstGauge.BackColor = Color.Red;
@@ -614,7 +696,7 @@ namespace FDS_PIC18F4550
                 valueMsgLength +
                 valueMsgID +
                 valueMsgValue +
-                @" >\";
+                @">\";
 
             SendDataToDevice(valueToSend);
             AD0_MediaGauge.BackColor = Color.Red;
@@ -631,7 +713,7 @@ namespace FDS_PIC18F4550
                 valueMsgLength +
                 valueMsgID +
                 valueMsgValue +
-                @" >\";
+                @">\";
 
             SendDataToDevice(valueToSend);
             AD1_MediaGauge.BackColor = Color.Red;
@@ -640,7 +722,7 @@ namespace FDS_PIC18F4550
 
         private void btnWrite_Click(object sender, EventArgs e)
         {
-            string valueMsgLength = "0B";
+            string valueMsgLength = "B";
             string valueMsgID = "07";
             string valueMsgValue = numericUpDown1.Value.ToString() +
                                 numericUpDown2.Value.ToString();
@@ -649,14 +731,14 @@ namespace FDS_PIC18F4550
                 valueMsgLength +
                 valueMsgID +
                 valueMsgValue +
-                @" >\";
+                @">\";
 
             SendDataToDevice(valueToSend);
         }
 
         private void btnRead_Click(object sender, EventArgs e)
         {
-            string valueMsgLength = "0B";
+            string valueMsgLength = "B";
             string valueMsgID = "05";
             string valueMsgValue = numericUpDown3.Value.ToString();
 
@@ -664,7 +746,22 @@ namespace FDS_PIC18F4550
                 valueMsgLength +
                 valueMsgID +
                 valueMsgValue +
-                @" >\";
+                @">\";
+
+            SendDataToDevice(valueToSend);
+        }
+
+        private void btnReadSwitchs_Click(object sender, EventArgs e)
+        {
+            string valueMsgLength = "7";
+            string valueMsgID = "0";
+            string valueMsgValue = "4";
+
+            string valueToSend = "/<" +
+                valueMsgLength +
+                valueMsgID +
+                valueMsgValue +
+                @">\";
 
             SendDataToDevice(valueToSend);
         }
